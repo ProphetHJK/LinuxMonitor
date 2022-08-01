@@ -5,9 +5,13 @@ from requests.adapters import HTTPAdapter
 s = requests.Session()
 s.mount('http://', HTTPAdapter(max_retries=5))
 s.mount('https://', HTTPAdapter(max_retries=5))
+proxies = {
+    'http': 'socks5h://127.0.0.1:1085',
+    'https': 'socks5h://127.0.0.1:1085'
+}
 
 
-def send_to_wecom(text, wecom_cid, wecom_aid, wecom_secret, wecom_touid='@all'):
+def send_to_wecom(text, wecom_cid, wecom_aid, wecom_secret, wecom_touid='HuangJinKai'):
     get_token_url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={wecom_cid}&corpsecret={wecom_secret}"
     response = s.get(get_token_url).content
     access_token = json.loads(response).get('access_token')
@@ -22,13 +26,13 @@ def send_to_wecom(text, wecom_cid, wecom_aid, wecom_secret, wecom_touid='@all'):
             },
             "duplicate_check_interval": 600
         }
-        response = s.post(send_msg_url, data=json.dumps(data)).content
+        response = s.post(send_msg_url, data=json.dumps(data),proxies=proxies).content
         return response
     else:
         return False
 
 
-def send_to_wecom_image(base64_content, wecom_cid, wecom_aid, wecom_secret, wecom_touid='@all'):
+def send_to_wecom_image(base64_content, wecom_cid, wecom_aid, wecom_secret, wecom_touid='HuangJinKai'):
     get_token_url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={wecom_cid}&corpsecret={wecom_secret}"
     response = s.get(get_token_url, timeout=5).content
     access_token = json.loads(response).get('access_token')
@@ -52,13 +56,13 @@ def send_to_wecom_image(base64_content, wecom_cid, wecom_aid, wecom_secret, weco
             },
             "duplicate_check_interval": 600
         }
-        response = s.post(send_msg_url, data=json.dumps(data)).content
+        response = s.post(send_msg_url, data=json.dumps(data),proxies=proxies).content
         return response
     else:
         return False
 
 
-def send_to_wecom_image_url(image_url, wecom_cid, wecom_aid, wecom_secret, wecom_touid='@all'):
+def send_to_wecom_image_url(image_url, wecom_cid, wecom_aid, wecom_secret, wecom_touid='HuangJinKai'):
     get_token_url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={wecom_cid}&corpsecret={wecom_secret}"
     response = s.get(get_token_url, timeout=5).content
     access_token = json.loads(response).get('access_token')
@@ -82,13 +86,13 @@ def send_to_wecom_image_url(image_url, wecom_cid, wecom_aid, wecom_secret, wecom
             },
             "duplicate_check_interval": 600
         }
-        response = s.post(send_msg_url, data=json.dumps(data)).content
+        response = s.post(send_msg_url, data=json.dumps(data),proxies=proxies).content
         return response
     else:
         return False
 
 
-def send_to_wecom_markdown(text, wecom_cid, wecom_aid, wecom_secret, wecom_touid='@all'):
+def send_to_wecom_markdown(text, wecom_cid, wecom_aid, wecom_secret, wecom_touid='HuangJinKai'):
     get_token_url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={wecom_cid}&corpsecret={wecom_secret}"
     response = s.get(get_token_url, timeout=5).content
     access_token = json.loads(response).get('access_token')
@@ -103,13 +107,13 @@ def send_to_wecom_markdown(text, wecom_cid, wecom_aid, wecom_secret, wecom_touid
             },
             "duplicate_check_interval": 600
         }
-        response = s.post(send_msg_url, data=json.dumps(data)).content
+        response = s.post(send_msg_url, data=json.dumps(data),proxies=proxies).content
         return response
     else:
         return False
 
 
-def send_to_wecom_news(news_title, news_desc, news_url, news_pic, wecom_cid, wecom_aid, wecom_secret, wecom_touid='@all'):
+def send_to_wecom_news(news_title, news_desc, news_url, news_pic, wecom_cid, wecom_aid, wecom_secret, wecom_touid='HuangJinKai'):
     get_token_url = f"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={wecom_cid}&corpsecret={wecom_secret}"
     response = s.get(get_token_url, timeout=5).content
     access_token = json.loads(response).get('access_token')
@@ -131,7 +135,7 @@ def send_to_wecom_news(news_title, news_desc, news_url, news_pic, wecom_cid, wec
             },
             "duplicate_check_interval": 600
         }
-        response = s.post(send_msg_url, data=json.dumps(data)).content
+        response = s.post(send_msg_url, data=json.dumps(data),proxies=proxies).content
         return response
     else:
         return False

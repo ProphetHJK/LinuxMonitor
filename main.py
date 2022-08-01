@@ -207,6 +207,10 @@ if __name__ == '__main__':
                         '- %(levelname)s: %(message)s',
                         level=logging.INFO,
                         handlers=handlers)
+    ret = wechatpush.send_to_wecom("linux monitor start!", corpid, agentid, secret)
+    logging.info(ret)
+
+
     while(True):
         monitor(corpid, agentid, secret, cpu_temperature_file, cpu_temperature_scaler, disk_mount_point,
                 ping_siteorip, cpu_temperature_threshold, cpu_usage_threshold, ram_free_threshold, 
