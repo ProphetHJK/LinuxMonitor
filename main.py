@@ -5,7 +5,9 @@ import logging
 import wechatpush
 import psutil
 import ping3
+import re
 from configparser import ConfigParser
+from datetime import datetime
 
 # Return CPU temperature as a character string
 
@@ -117,7 +119,8 @@ ping_flag = 99
 
 def monitor(corpid, agentid, secret, cpu_temperature_file, cpu_temperature_scaler, disk_mount_point,
                 ping_siteorip, cpu_temperature_threshold, cpu_usage_threshold, ram_free_threshold, 
-                ping_error_count_threshold, disk_free_threshold):
+                ping_error_count_threshold, disk_free_threshold, pc_power_switch, service_switch, 
+                service1_name, service2_name):
     global CPU_temp_flag
     global CPU_usage_flag
     global RAM_free_flag
@@ -178,12 +181,29 @@ def monitor(corpid, agentid, secret, cpu_temperature_file, cpu_temperature_scale
         logging.info("ping status:{}".format(pingresult))
         ping_flag = 0
 
+    # PC监控
+    if int(pc_power_switch) == 1:
+        pingresult = ping3.ping("192.168.123.3")
+        if pingresult is None:
+            logging.info("pc is poweroff now")
+        else:
+            logging.info("pc is power on now")
+            wechatpush.send_to_wecom("pc is power on now", corpid, agentid, secret)
+
+    # 服务监控
+    if int(service_switch) == 1:
+        service1_status = "".join(os.popen("service %s status" % service1_name).readlines())
+        service1_active = re.search(".*Active: (.*) \(.*",service1_status).group(1)
+        service2_status = "".join(os.popen("service %s status" % service2_name).readlines())
+        service2_active = re.search(".*Active: (.*) \(.*",service2_status).group(1)
+        wechatpush.send_to_wecom("*%s:\n%s\n*%s:\n%s" % (service1_name,service1_active,service2_name,service2_active), corpid, agentid, secret)
+
 
 if __name__ == '__main__':
     current_dir = os.path.dirname(os.path.abspath(__file__))
     # 加载参数
     config = ConfigParser()
-    config_file_path = os.path.join(current_dir,'config.ini')
+    config_file_path = os.path.join(current_dir,'config.ini.bak')
     config.read(config_file_path, encoding='utf-8')
     corpid = config['wechatpush']['corpid']
     agentid = config['wechatpush']['agentid']
@@ -193,12 +213,21 @@ if __name__ == '__main__':
     disk_mount_point = config['monitor']['disk_mount_point']
     ping_siteorip = config['monitor']['ping_siteorip']
     time_interval = config['monitor']['time_interval']
+    service1_name = config['monitor']['service1_name']
+    service2_name = config['monitor']['service2_name']
     cpu_temperature_threshold = config['threshold']['cpu_temperature_threshold']
     cpu_usage_threshold = config['threshold']['cpu_usage_threshold']
     ram_free_threshold = config['threshold']['ram_free_threshold']
     ping_error_count_threshold = config['threshold']['ping_error_count_threshold']
     disk_free_threshold = config['threshold']['disk_free_threshold']
     log_file_path = config['log']['log_file_path']
+    pc_power_switch = config['switch']['pc_power_switch']
+    service_switch = config['switch']['service_switch']
+    start_hour_day = config['monitor']['start_hour_day']
+    end_hour_day = config['monitor']['end_hour_day']
+    start_day_week = config['monitor']['start_day_week']
+    end_day_week = config['monitor']['end_day_week']
+
 
     # get info
     logger_file = os.path.join(log_file_path)
@@ -212,7 +241,12 @@ if __name__ == '__main__':
 
 
     while(True):
-        monitor(corpid, agentid, secret, cpu_temperature_file, cpu_temperature_scaler, disk_mount_point,
-                ping_siteorip, cpu_temperature_threshold, cpu_usage_threshold, ram_free_threshold, 
-                ping_error_count_threshold, disk_free_threshold)
+        logging.info('weekday:{},hour:{},start_hour_day:{},end_hour_day:{},start_day_week:{},end_day_week:{}'.format(datetime.today().weekday(),datetime.now().hour,start_hour_day,end_hour_day,start_day_week,end_day_week))
+        if (datetime.today().weekday()+1) <= int(end_day_week) and (datetime.today().weekday()+1) >= int(start_day_week):
+            if datetime.now().hour <= int(end_hour_day) and datetime.now().hour >= int(start_hour_day):
+                logging.info('run monitor')
+                monitor(corpid, agentid, secret, cpu_temperature_file, cpu_temperature_scaler, disk_mount_point,
+                        ping_siteorip, cpu_temperature_threshold, cpu_usage_threshold, ram_free_threshold, 
+                        ping_error_count_threshold, disk_free_threshold, pc_power_switch, service_switch, 
+                        service1_name, service2_name)
         time.sleep(int(time_interval))  # Time interval for obtaining resources
